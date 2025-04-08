@@ -3,7 +3,7 @@ package ejemplo.jflex;
 import java.util.Stack;
 /* Aqui arriva se importan todos los paquetes que necesite el codigo */
 
-/*
+/* prueba
  * Esta clase es un ejemplo simple de un lexer.
  */
 %%
