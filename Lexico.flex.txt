@@ -1,0 +1,238 @@
+/* Ejemplo de JFlex */
+package ejemplo.jflex;
+import java.util.Stack;
+/* Aqui arriva se importan todos los paquetes que necesite el codigo */
+
+/*
+ * Esta clase es un ejemplo simple de un lexer.
+ */
+%%
+
+%public
+%class MiLexico
+%unicode
+%type MiToken
+%line
+%column
+
+%{
+    /*************************************************************************
+    * En esta sección se puede incluir código que se copiará textualmente
+    * como parte de la definición de la clase del analizador léxico.
+    * Típicamente serán variables de instancia o nuevos métodos de la clase.
+    * esta seria la seccion de opciones (segun el profe)
+    *************************************************************************/
+
+    /* Variables para reconocer Strings */
+    StringBuffer string = new StringBuffer();
+    int string_yyline = 0;
+    int string_yycolumn = 0;
+
+    Stack<Character> comentarioPila = new Stack<>();
+    int nivelComentario = 0;
+
+    private MiToken token(String nombre) {
+        return new MiToken(nombre, this.yyline, this.yycolumn);
+    }
+
+    private MiToken token(String nombre, Object valor) {
+        return new MiToken(nombre, this.yyline, this.yycolumn, valor);
+    }
+
+    private MiToken token(String nombre, int line, int column, Object valor) {
+        return new MiToken(nombre, line, column, valor);
+    }
+%}
+
+/*Aqui se definen los PATRONES con sus expresiones regulares asociadas*/
+
+LineTerminator = \r|\n|\r\n
+WhiteSpace     = {LineTerminator} | [ \t\f]
+
+LitInteger = [0-9]+
+LitFloat = [0-9]+\.[0-9]+|[0-9]+\.|\.[0-9]+
+LitBoolean = \btrue\b | \bfalse\b
+LitArray = \[\s*(-?{LitFloat})(\s*,\s*-?{LitFloat})*\s*\]
+
+COMENTARIO_LINEA  = \$.*
+
+Identifier = [a-zA-Z_][a-zA-Z0-9_]*
+
+
+/*Se definen los estados*/
+%state CADENA 
+%state COMENTARIO
+
+
+%%
+
+<YYINITIAL> {
+  /* Aqui se definen las REGLAS, que asocian un determinado patron con una accion semantica (en codigo java)*/
+  /* palabras reservadas */
+  "abstract"           { return token("ABSTRACT", yytext());}  /*las acciones pueden ser retornar, cambiar de estado, lanzar error lexico o no hacer nada*/
+  "boolean"            { return token("BOOLEAN", yytext()); }
+  "break"              { return token("BREAK", yytext()); }
+  "DECLARE_SECTION"      { return token("DECLARE_SECTION", yytext()); }
+  "ENDDECLARE_SECTION"   { return token("ENDDECLARE_SECTION", yytext()); }
+  "PROGRAM_SECTION"      { return token("PROGRAM_SECTION", yytext()); }
+  "ENDPROGRAM_SECTION"   { return token("ENDPROGRAM_SECTION", yytext()); }
+  "LOOP WHEN"            { return token("LOOP_WHEN", yytext()); }
+  "BACKWARD_LOOP WHEN"   { return token("BACKWARD_LOOP_WHEN", yytext()); }
+  "THEN"                 { return token("THEN", yytext()); }
+  "END_LOOP"             { return token("END_LOOP", yytext()); }
+  "CONDITION"            { return token("CONDITION", yytext()); }
+  "BACKWARD_CONDITION"   { return token("BACKWARD_CONDITION", yytext()); }
+  "ELSE"                 { return token("ELSE", yytext()); }
+  "ELSE_BACKWARD"        { return token("ELSE_BACKWARD", yytext()); }
+  "END"                  { return token("END", yytext()); }
+  "BREAK"                { return token("BREAK", yytext()); }
+  "CONTINUE"             { return token("CONTINUE", yytext()); }
+  "DISPLAY"              { return token("DISPLAY", yytext()); }
+  "INPUT_INT()"          { return token("INPUT_INT", yytext()); }
+  "INPUT_FLOAT()"        { return token("INPUT_FLOAT", yytext()); }
+  "INPUT_BOOL()"         { return token("INPUT_BOOL", yytext()); }
+  "INPUT_ARRAY()"        { return token("INPUT_ARRAY", yytext()); }
+  "all()"                { return token("ALL_FUNCTION", yytext()); }
+  "any()"                { return token("ANY_FUNCTION", yytext()); }
+  
+/* literales */
+  {LitInteger}         { return token("INTEGER_LITERAL", yytext()); }
+  {LitFloat}           { return token("FLOAT_LITERAL", yytext()); }
+  {LitBoolean}         { return token("BOOLEAN_LITERAL", yytext()); }
+  {LitArray}           { return token("ARRAY_LITERAL", yytext()); }
+
+
+  /* operadores */
+  "+"                  { return token("OP_SUM", yytext()); }
+  "-"                  { return token("OP_SUB", yytext()); }
+  "*"                  { return token("OP_MUL", yytext()); }
+  "/"                  { return token("OP_DIV", yytext()); }
+ /*ver si hacer el negado*/  
+  "="                  { return token("EQ",   yytext()); }
+
+ /*operadores de comparacion*/
+  "=="                 { return token("OP_IGUAL", yytext()); }
+  "!="                 { return token("OP_NEQ", yytext()); }
+  ">"                  { return token("OP_MAY", yytext()); }
+  "<"                  { return token("OP_MEN", yytext()); }
+  ">="                 { return token("OP_MAYI", yytext()); }
+  "<="                 { return token("OP_MENI", yytext()); }
+
+ /*operadores logicos*/
+  "and"                { return token("OP_AND", yytext()); }
+  "or"                 { return token("OP_OR", yytext()); }
+  "not"                { return token("OP_NOT", yytext()); }
+
+/*comentarios erroneos*/
+  "[*"                 { throw new Error("Error: Se encontró '[*' sin haber abierto un (*."); }
+  "{*"                 { throw new Error("Error: Se encontró '{*' sin haber abierto un [*."); }
+  "*)"                 { throw new Error("Error: Se encontró '*)' sin haber abierto un comentario."); }
+  "*}"                 { throw new Error("Error: Se encontró '*}' sin haber abierto un comentario."); }
+  "*]"                 { throw new Error("Error: Se encontró '*]' sin haber abierto un comentario."); }
+
+ 
+/*Tipos de datos*/
+  "int"                { return token("TYPE_INT", yytext()); }
+  "string"             { return token("TYPE_STRING", yytext()); }
+  "float"              { return token("TYPE_FLOAT", yytext()); }
+  "bool"               { return token("TYPE_BOOL", yytext()); }
+  "FLOAT_ARRAY"          { return token("TIPO_FLOAT_ARRAY", yytext()); }
+
+  /*Simbolos*/
+  "("                  { return token("PAREN_ABIERTO", yytext()); }
+  ")"                  { return token("PAREN_CERRADO", yytext()); } 
+  "["                  { return token("CORCHETE_ABIERTO", yytext()); }
+  "]"                  { return token("CORCHETE_CERRADO", yytext()); }
+  "{"                  { return token("LLAVE_ABIERTO", yytext()); }
+  "}"                  { return token("LLAVE_CERRADO", yytext()); }
+  ","                  { return token("COMA", yytext()); }
+  ":"                 { return token("DECLARACION", yytext()); }
+  ":="                 { return token("ASIGNACION", yytext()); }
+  "."                 { return token("PUNTO", yytext()); }
+
+
+  {Identifier}         { return token("IDENTIFICADOR", yytext()); }
+
+  /*Comentarios de una linea*/
+  {COMENTARIO_LINEA} { /* Ignorar */ }
+
+  /* espacios en blanco */
+  {WhiteSpace}         { /* ignore */ }
+
+  \"                   { string.setLength(0);
+                         string_yyline = this.yyline;
+                         string_yycolumn = this.yycolumn;
+                         yybegin(CADENA);
+                       }
+}
+
+/* Comentarios multilínea */
+"(*"                   { comentarioPila.push('('); 
+                         nivelComentario = 1; 
+                         yybegin(COMENTARIO); }
+
+/* Manejo de comentarios */
+<COMENTARIO> {
+/* Apertura de comentarios anidados */
+    "(*" { comentarioPila.push('('); nivelComentario = 1; }
+    "[*" { comentarioPila.push('['); nivelComentario = 2;}
+    "{*" { comentarioPila.push('{'); nivelComentario = 3;}
+
+/* Cierre de comentarios con validación de jerarquía */
+    "*)" {
+        if (!comentarioPila.isEmpty() && comentarioPila.peek() == '(' && nivelComentario == 1){
+            comentarioPila.pop();
+            nivelComentario = 3;
+            if (comentarioPila.isEmpty()) yybegin(YYINITIAL);
+        } else {
+            throw new Error("Error de balanceo: Se esperaba cierre para " + comentarioPila.peek());
+        }
+    }
+    "*]" {
+        if (!comentarioPila.isEmpty() && comentarioPila.peek() == '[' && nivelComentario == 2){
+            comentarioPila.pop();
+            nivelComentario = 1;
+            if (comentarioPila.isEmpty()) yybegin(YYINITIAL);
+        } else {
+            throw new Error("Error de balanceo: Se esperaba cierre para " + comentarioPila.peek());
+        }
+    }
+    "*}" {
+        if (!comentarioPila.isEmpty() && comentarioPila.peek() == '{' && nivelComentario == 3){
+            comentarioPila.pop();
+            nivelComentario = 2;
+            if (comentarioPila.isEmpty()) yybegin(YYINITIAL);
+        } else {
+            throw new Error("Error de balanceo: Se esperaba cierre para " + comentarioPila.peek());
+        }
+    }
+    /* Fin de archivo */
+    <<EOF>> {
+        if (!comentarioPila.isEmpty()) {
+            throw new Error("Error: Fin de archivo con comentario no cerrado. Se esperaba cierre para " + comentarioPila.peek());
+        }
+    }
+[^] { /* Ignorar otros caracteres dentro del comentario */ }
+
+}
+
+
+<CADENA> {
+  \"                   { yybegin(YYINITIAL);
+                         return token("STRING_LITERAL",
+                                      string_yyline, string_yycolumn,
+                                      string.toString());
+                       }
+  \\\"                 { string.append('\"'); }
+  \\n                  { string.append('\n'); }  /* Para soportar saltos de línea escapados */
+  \\t                  { string.append('\t'); }  /* Para tabulaciones */
+
+  /* Fin de archivo */
+  <<EOF>>              { throw new Error("Fin de archivo dentro de la cadena en línea " + string_yyline + ", columna " + string_yycolumn); }
+
+  /* Cualquier otro carácter */
+  [^]                  { string.append(yytext()); }
+}
+
+/* fallback de errores */
+[^]                    { throw new Error("Carácter inválido <"+yytext()+">"); }
