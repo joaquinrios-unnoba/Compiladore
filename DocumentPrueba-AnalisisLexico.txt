@@ -1,0 +1,168 @@
+$ Programa de Prueba 1
+
+DECLARE.SECTION
+   INTEGER : a, b, c
+   FLOAT : x, y, resultado
+   FLOAT_ARRAY[5] : mi_arreglo
+   BOOLEAN : es_igual, mayor
+ENDDECLARE.SECTION
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   c := 10
+   x := 20.5
+   y := -3.2
+   mi_arreglo[0] := x + y
+
+   (* Operaciones aritméticas *)
+   resultado := (a + b * c) / x
+
+   (* Comparaciones *)
+   es_igual := resultado == 10
+   mayor := x > y and not es_igual
+
+   (* Ciclo LOOP *)
+   LOOP WHEN (a < c) THEN
+      DISPLAY("Iterando en el ciclo LOOP")
+      a := a + 1
+   END_LOOP
+
+   (* Ciclo BACKWARD_LOOP *)
+   BACKWARD_LOOP WHEN (c > b) THEN
+      DISPLAY("Iterando hacia atrás en el ciclo BACKWARD_LOOP")
+      c := c - 1
+   END_LOOP
+
+   (* Sentencia de selección *)
+   CONDITION (mayor == true) THEN
+      DISPLAY("x es mayor que y")
+   ELSE
+      DISPLAY("x no es mayor que y")
+   END
+
+   (* Operaciones con arreglos *)
+   resultado := all(x, >, mi_arreglo)
+   DISPLAY("Todos los elementos son mayores que x:", resultado)
+
+   (* Entrada y salida *)
+   DISPLAY("Resultado final:", resultado)
+   INPUT_INT()
+   INPUT_FLOAT()
+   INPUT_ARRAY()
+
+   (* Comentarios multilínea anidados *)
+   (* Nivel 1
+      [* Nivel 2
+         {* Nivel 3
+            (* Otro nivel 1 *)
+         *}
+      *]
+   *)
+ENDPROGRAM.SECTION
+
+
+
+
+
+$ Programa de Prueba 2
+
+DECLARE.SECTION
+   INTEGER : contador, limite
+   FLOAT : suma, promedio
+   FLOAT_ARRAY[5] : datos
+   BOOLEAN : es_valido, todos_cumplen
+ENDDECLARE.SECTION
+
+PROGRAM.SECTION
+   (* Inicialización de variables *)
+   contador := 0
+   limite := 5
+   suma := 0.0
+   datos := [10.5, -3.2, 7.8, 0.0, 4.2]
+   es_valido := true
+
+   (* Verificar si todos los elementos del arreglo cumplen una condición *)
+   todos_cumplen := all(5.0, >, datos)
+   CONDITION (todos_cumplen) THEN
+      DISPLAY("Todos los elementos son mayores a 5.")
+   ELSE
+      DISPLAY("Hay elementos menores o iguales a 5.")
+   END
+
+   (* Calcular la suma y el promedio *)
+   LOOP WHEN (contador < limite) THEN
+      suma := suma + datos[contador]
+      contador := contador + 1
+      CONTINUE
+   END_LOOP
+   promedio := suma / limite
+   DISPLAY("Suma total:", suma)
+   DISPLAY("Promedio:", promedio)
+
+   (* Verificar si el promedio es válido *)
+   CONDITION (promedio >= 0.0) THEN
+      DISPLAY("El promedio es válido.")
+   ELSE
+      es_valido := false
+      DISPLAY("El promedio no es válido.")
+   END
+
+   (* Comentarios multilínea anidados *)
+   (* Este comentario explica la lógica:
+      [* Contamos elementos mientras
+         {* Calculamos la suma y promedio *}
+      *]
+   *)
+ENDPROGRAM.SECTION
+
+
+
+
+
+
+$ Programa de Prueba 3
+
+DECLARE.SECTION
+   INTEGER : i, limite, suma
+   FLOAT : promedio, valor_minimo
+   FLOAT_ARRAY[4] : datos
+   BOOLEAN : resultado, valido
+ENDDECLARE.SECTION
+
+PROGRAM.SECTION
+   (* Inicialización *)
+   i := 0
+   limite := 4
+   suma := 0
+   datos := [5.0, 12.3, -4.7, 8.1]
+   valor_minimo := 0.0
+   resultado := true
+
+   (* Ciclo para calcular la suma de valores mayores a 'valor_minimo' *)
+   LOOP WHEN (i < limite) THEN
+      CONDITION (datos[i] > valor_minimo) THEN
+         suma := suma + datos[i]
+      ELSE
+         DISPLAY("El valor", datos[i], "es menor o igual a", valor_minimo)
+      END
+      i := i + 1
+   END_LOOP
+
+   (* Calcular el promedio *)
+   promedio := suma / limite
+   DISPLAY("Suma total:", suma)
+   DISPLAY("Promedio calculado:", promedio)
+
+   (* Verificar si el promedio cumple ciertas condiciones *)
+   CONDITION (promedio >= 0.0 and promedio <= 10.0) THEN
+      valido := true
+      DISPLAY("El promedio es válido.")
+   ELSE
+      valido := false
+      DISPLAY("El promedio no es válido.")
+   END
+
+   (* Operación 'all' para verificar valores en el arreglo *)
+   resultado := all(valor_minimo, <, datos)
